@@ -1,7 +1,7 @@
 /* LORD of ROBOTS - LoR_Core_WeInterface - 202305222133
    Control inputs - LED Indication:
-    Command Recived - Green LED
-    none/Stop/standby - Red LED
+    Command Recived - Green LEDs
+    none/Stop/standby - Red LEDs
 
   Drive configurations:
     Standard tank style
