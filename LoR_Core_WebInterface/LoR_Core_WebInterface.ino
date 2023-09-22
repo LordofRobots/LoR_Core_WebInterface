@@ -127,13 +127,12 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         -ms-user-select: none; /* IE 10+ */
         user-select: none; /* Likely future */
       }
-      img { width: auto; max-width: 100%; height: auto; }
+      
       #buttons { text-align: center; }
     </style>
   </head>
   <body style="background-color:black;" oncontextmenu="return false;">
     <h1 style="color:white">CAMRON MiniBot</h1>
-    <img src="" id="photo">
     <div id="buttons">
       <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button><br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()">Left</button>
