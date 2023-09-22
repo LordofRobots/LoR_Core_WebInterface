@@ -78,10 +78,16 @@ void handle_LEDoff() {
   server.send(200, "text/html", SendHTML(false)); 
 }
 
+//====================================================
+//===               handler                        ===
+//====================================================
 void handle_NotFound(){
   server.send(404, "text/plain", "Not found");
 }
 
+//====================================================
+//===              web page                        ===
+//====================================================
 String SendHTML(uint8_t LEDstat){
   String ptr = "<!DOCTYPE html> <html>\n";
   ptr +="<head><meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0, user-scalable=no\">\n";
