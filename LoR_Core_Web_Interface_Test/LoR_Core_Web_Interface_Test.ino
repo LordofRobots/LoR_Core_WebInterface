@@ -1,6 +1,7 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <Adafruit_NeoPixel.h>
+#include <ESPmDNS.h>
 
 /* Put your SSID & Password */
 const char* ssid = "MiniBot";  // Enter SSID here
@@ -42,6 +43,9 @@ void setup() {
   WiFi.softAPConfig(local_ip, gateway, subnet);
   delay(100);
   
+   if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
+  MDNS.addService("http", "tcp", 80);
+
   server.on("/", handle_OnConnect);
   server.on("/LEDon", handle_LEDon);
   server.on("/LEDoff", handle_LEDoff);
