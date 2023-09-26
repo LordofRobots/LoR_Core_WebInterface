@@ -280,7 +280,7 @@ void setup() {
   delay(100);
   
    if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
-  MDNS.addService("http", "tcp", 80);
+  MDNS.addService("http", "tcp", 80); /// wtf why?????
 
   server.on("/", handle_OnConnect);
   server.on("/led1on", handle_led1on);

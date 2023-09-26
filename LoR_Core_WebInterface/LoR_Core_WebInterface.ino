@@ -66,12 +66,12 @@ const int PWM_RESOLUTION = 8;
 const char *ssid = "MiniBot-";
 
 // Global variables for HTTP server instances
-static const char *_STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
-static const char *_STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
-static const char *_STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
+// static const char *_STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
+// static const char *_STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
+// static const char *_STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
 
-httpd_handle_t camera_httpd = NULL;
-httpd_handle_t stream_httpd = NULL;
+ httpd_handle_t Robot_httpd = NULL;
+// httpd_handle_t stream_httpd = NULL;
 
 // Function to convert MAC address to string format. MAC address of the ESP32 in format "XX:XX:XX:XX:XX:XX"
 String UniqueID() {
@@ -89,8 +89,8 @@ String PasswordGen() {
   String mixedString = "";
   for (int i = 0; i < 6; i++) {
     char uniqueChar = uniqueID.charAt(i);
-    char camronChar = "CAMRON"[i];
-    int mixedValue = (uniqueChar - '0') + (camronChar - 'A') + i;
+    char MINIBOTChar = "MINIBOT"[i];
+    int mixedValue = (uniqueChar - '0') + (MINIBOTChar - 'A') + i;
     mixedValue %= 16;  // limit to single hex digit
     mixedString += (char)((mixedValue < 10) ? ('0' + mixedValue) : ('A' + mixedValue - 10));
   }
@@ -132,15 +132,13 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     </style>
   </head>
   <body style="background-color:black;" oncontextmenu="return false;">
-    <h1 style="color:white">CAMRON MiniBot</h1>
+    <h1 style="color:white">MiniBot Control</h1>
     <div id="buttons">
       <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button><br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()">Left</button>
       <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()">Stop</button>
       <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()">Right</button><br>
-      <button class="button" onpointerdown="sendData('ledon')" onpointerup="releaseData()">LED ON</button>
       <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()">Backward</button>
-      <button class="button" onpointerdown="sendData('ledoff')" onpointerup="releaseData()">LED OFF</button>
  </div>
     <script>
       var isButtonPressed = false; // Add this flag
@@ -165,8 +163,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyA': 'left',
         'KeyS': 'backward',
         'KeyD': 'right',
-        'KeyL': 'ledon',
-        'KeyO': 'ledoff'
       };
 
       document.addEventListener('keydown', function(event) {
@@ -207,13 +203,12 @@ void startServer() {
     .user_ctx = NULL
   };
 
-  if (httpd_start(&camera_httpd, &config) == ESP_OK) {
-    httpd_register_uri_handler(camera_httpd, &index_uri);
-    httpd_register_uri_handler(camera_httpd, &cmd_uri);
+  if (httpd_start(&Robot_httpd, &config) == ESP_OK) {
+    httpd_register_uri_handler(Robot_httpd, &index_uri);
+    httpd_register_uri_handler(Robot_httpd, &cmd_uri);
   }
   config.server_port += 1;
   config.ctrl_port += 1;
-
 }
 
 
@@ -268,19 +263,10 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     Serial.println("Backward");
   } else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
-  }
-  /* else if (!strcmp(variable, "ledon")) {
-    Serial.println("xON");
-    analogWrite(LED_OUTPUT, LED_Max);
-  } else if (!strcmp(variable, "ledoff")) {
-    Serial.println("xOFF");
-    analogWrite(LED_OUTPUT, 0);
-  } */
-  else {
+  } else {
     Serial.println("Stop");
     res = -1;
   }
-  //Serial.println("\n");
 
   if (res) {
     return httpd_resp_send_500(req);
@@ -290,13 +276,20 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
+//====================================================
+//===              Wifi Stuff                      ===
+//====================================================
 
+/* Put IP Address details */
+IPAddress local_ip(10, 0, 0, 1);
+IPAddress gateway(10, 0, 0, 1);
+IPAddress subnet(255, 255, 255, 0);
 void WifiSetup() {
   // Wi-Fi connection
   // Set up access point with SSID "MiniBot" + MAC address
   WiFi.mode(WIFI_AP);
-
   WiFi.softAP("robot", "password");
+  WiFi.softAPConfig(local_ip, gateway, subnet);
   // Set up mDNS responder
   if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
   MDNS.addService("http", "tcp", 80);
@@ -418,11 +411,8 @@ void setup() {
 
   WifiSetup();
   startServer();
-
 }
 
 
 void loop() {
-
 }
-
