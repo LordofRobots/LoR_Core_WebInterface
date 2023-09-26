@@ -232,10 +232,10 @@ String SendHTML(uint8_t led1stat,uint8_t led2stat){
   else
   {ptr +="<p>LED1 Status: OFF</p><a class=\"button button-on\" href=\"/led1on\">FORWARD</a>\n";}
 
-  /*if(led2stat)
+  if(led2stat)
   {ptr +="<p>LED2 Status: ON</p><a class=\"button button-off\" href=\"/led2off\">OFF</a>\n";}
   else
-  {ptr +="<p>LED2 Status: OFF</p><a class=\"button button-on\" href=\"/led2on\">ON</a>\n";}*/
+  {ptr +="<p>LED2 Status: OFF</p><a class=\"button button-on\" href=\"/led2on\">ON</a>\n";}
 
   ptr +="</body>\n";
   ptr +="</html>\n";
@@ -285,8 +285,8 @@ void setup() {
   server.on("/", handle_OnConnect);
   server.on("/led1on", handle_led1on);
   server.on("/led1off", handle_led1off);
-  /*server.on("/led2on", handle_led2on);
-  server.on("/led2off", handle_led2off);*/
+  server.on("/led2on", handle_led2on);
+  server.on("/led2off", handle_led2off);
   server.onNotFound(handle_NotFound);
   
   server.begin();
@@ -306,23 +306,16 @@ void loop() {
     delay(5);
     Motor_Control();
   }
-  else if(!LED1status){
-    NeoPixel_SetColour(RED);
-    Motion_Control(0, 0, 0);  // Joystick control
-    delay(5);
-    Motor_Control();
-  }
-
-  /*if(LED2status){
+  else if(LED2status){
     NeoPixel_SetColour(BLUE);
     Motion_Control(-150, 0, 0);  // Joystick control
     delay(5);
     Motor_Control();
   }
-  else if(!LED2status){
+  else {
     NeoPixel_SetColour(RED);
     Motion_Control(0, 0, 0);  // Joystick control
     delay(5);
     Motor_Control();
-  }*/
+  }
 }
