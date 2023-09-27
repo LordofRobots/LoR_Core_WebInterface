@@ -19,8 +19,9 @@
 // version control and major control function settings
 String Version = "Base Version : LoR Core Web Interface : 0.0.0";
 
-// Pin definitions and other constants
-#define PART_BOUNDARY "123456789000000000000987654321"
+// SSID & Password Definitions
+const String ssid = "MiniBot-";
+const String password = "password";
 
 // IO Interface Definitions
 #define LED_DataPin 12
@@ -62,42 +63,74 @@ const int MOTOR_PWM_Channel_B[] = { Motor_M1_B, Motor_M2_B, Motor_M3_B, Motor_M4
 const int PWM_FREQUENCY = 20000;
 const int PWM_RESOLUTION = 8;
 
-// WiFi configuration of SSID
-const char *ssid = "MiniBot-";
 
-// Global variables for HTTP server instances
-// static const char *_STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
-// static const char *_STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
-// static const char *_STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
+//====================================================
+//===              Motor Controls                  ===
+//====================================================
 
- httpd_handle_t Robot_httpd = NULL;
-// httpd_handle_t stream_httpd = NULL;
-
-// Function to convert MAC address to string format. MAC address of the ESP32 in format "XX:XX:XX:XX:XX:XX"
-String UniqueID() {
-  uint8_t mac[6];
-  esp_read_mac(mac, ESP_MAC_WIFI_STA);  // Get unique MAC address
-  char buffer[13];                      // Save MAC address to string
-  sprintf(buffer, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  String uniqueID = buffer;
-  uniqueID = uniqueID.substring(6, 12);  // limit to last 6 digits
-  return uniqueID;
-}
-
-String PasswordGen() {
-  String uniqueID = UniqueID();
-  String mixedString = "";
-  for (int i = 0; i < 6; i++) {
-    char uniqueChar = uniqueID.charAt(i);
-    char MINIBOTChar = "MINIBOT"[i];
-    int mixedValue = (uniqueChar - '0') + (MINIBOTChar - 'A') + i;
-    mixedValue %= 16;  // limit to single hex digit
-    mixedString += (char)((mixedValue < 10) ? ('0' + mixedValue) : ('A' + mixedValue - 10));
+/// Function to control motor output 
+// Motor speed limits and starting speed
+const int MIN_STARTING_SPEED = 140;
+const int MAX_SPEED = 255;
+const int STOP = 0;
+void Set_Motor_Output(int Output, int Motor_ChA, int Motor_ChB) {
+  int Mapped_Value = map(abs(Output), 0, 100, MIN_STARTING_SPEED, MAX_SPEED);
+  int A, B = 0;
+  if (Output < 0) {  // Rotate Clockwise
+    A = 0;
+    B = Mapped_Value;
+  } else if (Output > 0) {  // Rotate Counter-Clockwise
+    A = Mapped_Value;
+    B = 0;
+  } else {  // Rotation Stop
+    A = STOP;
+    B = STOP;
   }
-  mixedString = "LoR" + mixedString;
-  return mixedString;
+  ledcWrite(Motor_ChA, A);  //send to motor control pins
+  ledcWrite(Motor_ChB, B);
 }
-const String SystemPassword = String(PasswordGen());
+
+// configure motor output
+void Motor_Control(int Left_Drive_Power, int Right_Drive_Power) {
+  Set_Motor_Output(Left_Drive_Power, Motor_M1_A, Motor_M1_B);
+  Set_Motor_Output(Left_Drive_Power, Motor_M2_A, Motor_M2_B);
+  Set_Motor_Output(-Right_Drive_Power, Motor_M5_A, Motor_M5_B);
+  Set_Motor_Output(-Right_Drive_Power, Motor_M6_A, Motor_M6_B);
+}
+
+// stop motors from spinning
+void Motor_STOP() {
+  Set_Motor_Output(STOP, Motor_M1_A, Motor_M1_B);
+  Set_Motor_Output(STOP, Motor_M2_A, Motor_M2_B);
+  Set_Motor_Output(STOP, Motor_M5_A, Motor_M5_B);
+  Set_Motor_Output(STOP, Motor_M6_A, Motor_M6_B);
+}
+
+//====================================================
+//===              NeoPixels                       ===
+//====================================================
+
+// NeoPixel Configurations
+Adafruit_NeoPixel strip(LED_COUNT, LED_DataPin, NEO_GRB + NEO_KHZ800);
+const uint32_t RED = strip.Color(255, 0, 0, 0);
+const uint32_t GREEN = strip.Color(0, 255, 0, 0);
+const uint32_t BLUE = strip.Color(0, 0, 255, 0);
+const uint32_t WHITE = strip.Color(0, 0, 0, 255);
+const uint32_t PURPLE = strip.Color(255, 0, 255, 0);
+const uint32_t CYAN = strip.Color(0, 255, 255, 0);
+const uint32_t YELLOW = strip.Color(255, 255, 0, 0);
+
+// Set a specific color for the entire NeoPixel strip
+void NeoPixel_SetColour(uint32_t color) {
+  for (int i = 0; i < strip.numPixels(); i++) {  // For each pixel in strip...
+    strip.setPixelColor(i, color);               //  Set pixel's color (in RAM)
+  }
+  strip.show();  // Update strip with new contents
+}
+
+//====================================================
+//===              Web Page                        ===
+//====================================================
 
 // Web page (HTML, CSS, JavaScript) for controlling the robot
 static const char PROGMEM INDEX_HTML[] = R"rawliteral(
@@ -177,15 +210,13 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
          releaseData();
       });
 
-      window.onload = function() {
-        document.getElementById("photo").src = window.location.href.slice(0, -1) + ":81/stream";
-      }
     </script>
   </body>
 </html>
 )rawliteral";
 
 // Function to start the camera server
+httpd_handle_t Robot_httpd = NULL;
 void startServer() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.server_port = 80;
@@ -211,6 +242,10 @@ void startServer() {
   config.ctrl_port += 1;
 }
 
+
+//====================================================
+//===                Handlers                      ===
+//====================================================
 
 // HTTP handler for serving the web page
 static esp_err_t index_handler(httpd_req_t *req) {
@@ -255,16 +290,32 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   int LED_Max = 50;
   if (!strcmp(variable, "forward")) {
     Serial.println("Forward");
-  } else if (!strcmp(variable, "left")) {
+    NeoPixel_SetColour(GREEN);
+    Motor_Control(50, 50);      // send 50% power to drive base
+  } 
+  else if (!strcmp(variable, "left")) {
     Serial.println("Left");
-  } else if (!strcmp(variable, "right")) {
+    NeoPixel_SetColour(PURPLE);   
+    Motor_Control(-50, 50);     // send 50% power to drive base
+  } 
+  else if (!strcmp(variable, "right")) {
     Serial.println("Right");
-  } else if (!strcmp(variable, "backward")) {
+    NeoPixel_SetColour(BLUE);
+    Motor_Control(50, -50);     // send 50% power to drive base
+  } 
+  else if (!strcmp(variable, "backward")) {
     Serial.println("Backward");
-  } else if (!strcmp(variable, "stop")) {
+    NeoPixel_SetColour(YELLOW);
+    Motor_Control(-50, -50);    // send 50% power to drive base
+  } 
+  else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
-  } else {
+    NeoPixel_SetColour(RED);
+    Motor_STOP();
+  } 
+  else {
     Serial.println("Stop");
+    Motor_STOP();
     res = -1;
   }
 
@@ -276,8 +327,9 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
+
 //====================================================
-//===              Wifi Stuff                      ===
+//===              Wifi Setup                      ===
 //====================================================
 
 /* Put IP Address details */
@@ -288,7 +340,7 @@ void WifiSetup() {
   // Wi-Fi connection
   // Set up access point with SSID "MiniBot" + MAC address
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("robot", "password");
+  WiFi.softAP(ssid, password);
   WiFi.softAPConfig(local_ip, gateway, subnet);
   // Set up mDNS responder
   if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
@@ -298,78 +350,9 @@ void WifiSetup() {
   Serial.println("MiniBot System Ready! Version = " + Version);
 }
 
-// Function to handle slew rate for motor speed ramping
-// Slew rate for ramping motor speed
-const int SLEW_RATE_MS = 20;
-int SlewRateFunction(int Input_Target, int Input_Current) {
-  int speedDiff = Input_Target - Input_Current;
-  if (speedDiff > 0) Input_Current += min(speedDiff, SLEW_RATE_MS);
-  else if (speedDiff < 0) Input_Current -= min(-speedDiff, SLEW_RATE_MS);
-  constrain(Input_Current, -127, 127);
-  return Input_Current;
-}
-
-// Function to control motor output based on input values
-// Motor speed limits and starting speed
-const int DEAD_BAND = 20;
-const int MAX_SPEED = 255;
-const int MIN_SPEED = -255;
-const int MIN_STARTING_SPEED = 140;
-const int STOP = 0;
-bool INVERT = false;
-void Set_Motor_Output(int Output, int Motor_ChA, int Motor_ChB) {
-  if (INVERT) Output = -Output;
-  Output = constrain(Output, -127, 127);
-  int Mapped_Value = map(abs(Output), 0, 127, MIN_STARTING_SPEED, MAX_SPEED);
-  int A, B = 0;
-  if (Output < -DEAD_BAND) {  // Rotate Clockwise
-    A = 0;
-    B = Mapped_Value;
-  } else if (Output > DEAD_BAND) {  // Rotate Counter-Clockwise
-    A = Mapped_Value;
-    B = 0;
-  } else {  // Rotation Stop
-    A = STOP;
-    B = STOP;
-  }
-  ledcWrite(Motor_ChA, A);  //send to motor control pins
-  ledcWrite(Motor_ChB, B);
-}
-
-// configure motor output
-int Motor_FrontLeft_SetValue, Motor_FrontRight_SetValue, Motor_BackLeft_SetValue, Motor_BackRight_SetValue = 0;
-void Motor_Control() {
-  Set_Motor_Output(Motor_FrontLeft_SetValue, Motor_M1_A, Motor_M1_B);
-  Set_Motor_Output(Motor_BackLeft_SetValue, Motor_M2_A, Motor_M2_B);
-  Set_Motor_Output(Motor_FrontRight_SetValue, Motor_M5_A, Motor_M5_B);
-  Set_Motor_Output(Motor_BackRight_SetValue, Motor_M6_A, Motor_M6_B);
-}
-
-// stop motors from spinning
-void Motor_STOP() {
-  Set_Motor_Output(STOP, Motor_M1_A, Motor_M1_B);
-  Set_Motor_Output(STOP, Motor_M2_A, Motor_M2_B);
-  Set_Motor_Output(STOP, Motor_M5_A, Motor_M5_B);
-  Set_Motor_Output(STOP, Motor_M6_A, Motor_M6_B);
-}
-
-// NeoPixel Configurations
-Adafruit_NeoPixel strip(LED_COUNT, LED_DataPin, NEO_GRB + NEO_KHZ800);
-const uint32_t RED = strip.Color(255, 0, 0, 0);
-const uint32_t GREEN = strip.Color(0, 255, 0, 0);
-const uint32_t BLUE = strip.Color(0, 0, 255, 0);
-const uint32_t WHITE = strip.Color(0, 0, 0, 255);
-const uint32_t PURPLE = strip.Color(255, 0, 255, 0);
-const uint32_t CYAN = strip.Color(0, 255, 255, 0);
-const uint32_t YELLOW = strip.Color(255, 255, 0, 0);
-
-// Set a specific color for the entire NeoPixel strip
-void NeoPixel_SetColour(uint32_t color) {
-  for (int i = 0; i < strip.numPixels(); i++) {  // For each pixel in strip...
-    strip.setPixelColor(i, color);               //  Set pixel's color (in RAM)
-  }
-  strip.show();  // Update strip with new contents
-}
+//====================================================
+//===                 setup                        ===
+//====================================================
 
 // Set up pins, LED PWM functionalities and Serial and Serial2 communication
 void setup() {
