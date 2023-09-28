@@ -134,15 +134,29 @@ void NeoPixel_SetColour(uint32_t color) {
 
 // Web page (HTML, CSS, JavaScript) for controlling the robot
 static const char PROGMEM INDEX_HTML[] = R"rawliteral(
-  <html>
+<html>
   <head>
     <title>LORD of ROBOTS</title>
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" >
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no\">
     <style>
-      body { font-family: Arial; text-align: center; margin:0 auto; padding-top: 30px;}
+      body {
+        font-family: Helvetica;
+        text-align: center;
+        margin: 0 auto;
+        padding-top: 30px;
+      }
+      h1 {
+        color: #000000;
+        margin: 50px auto 30px;  
+      }
+      h3 {
+        color: #001844;
+        margin-bottom: 50px;
+      }
+
       .button {
-        background-color: #2f4468;
-        width: 100px;
+        background-color: #003087;
+        width: 120px;
         height: 80px;
         border: none;
         color: white;
@@ -150,32 +164,48 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         font-weight: bold;
         text-align: center;
         text-decoration: none;
-        border-radius: 10px;
+        border-radius: 5px;
         display: inline-block;
         margin: 6px 6px;
         cursor: pointer;
-        -webkit-tap-highlight-color: rgba(0,0,0,0);
-        -webkit-user-select: none; /* Chrome, Safari, Opera */
-        -moz-user-select: none; /* Firefox all */
-        -ms-user-select: none; /* IE 10+ */
-        user-select: none; /* Likely future */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-user-select: none;
+        /* Chrome, Safari, Opera */
+        -moz-user-select: none;
+        /* Firefox all */
+        -ms-user-select: none;
+        /* IE 10+ */
+        user-select: none;
+        /* Likely future */
       }
       
-      #buttons { text-align: center; }
+      .button:active {
+        background-color: white; /* Change background color when pressed */
+        color: #003087;
+        border: 2px solid;
+        border-color: #003087;
+      }
+
+      #buttons {
+        text-align: center;
+        margin-left: 0px;
+      }
     </style>
   </head>
-  <body style="background-color:black;" oncontextmenu="return false;">
-    <h1 style="color:white">MiniBot Control</h1>
+  <body style="background-color:white;" oncontextmenu="return false;">
+    <h1>LoR MiniBots</h1>
+    <h3>Web Control Interface</h3>
     <div id="buttons">
-      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button><br>
+      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button>
+      <br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()">Left</button>
       <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()">Stop</button>
-      <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()">Right</button><br>
+      <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()">Right</button>
+      <br>
       <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()">Backward</button>
- </div>
+    </div>
     <script>
       var isButtonPressed = false; // Add this flag
-
       function sendData(x) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "/action?go=" + x, true);
@@ -186,7 +216,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         isButtonPressed = false; // A button has been released
         sendData('stop');
       }
-
       const keyMap = {
         'ArrowUp': 'forward',
         'ArrowLeft': 'left',
@@ -197,7 +226,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyS': 'backward',
         'KeyD': 'right',
       };
-
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
           const action = keyMap[event.code];
@@ -205,14 +233,12 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
           isButtonPressed = true; // A button has been pressed
         }
       });
-
       document.addEventListener('keyup', function(event) {
-         releaseData();
+        releaseData();
       });
-
     </script>
   </body>
-</html>
+</html> 
 )rawliteral";
 
 // Function to start the camera server
@@ -300,12 +326,12 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   } 
   else if (!strcmp(variable, "right")) {
     Serial.println("Right");
-    NeoPixel_SetColour(BLUE);
+    NeoPixel_SetColour(CYAN);
     Motor_Control(50, -50);     // send 50% power to drive base
   } 
   else if (!strcmp(variable, "backward")) {
     Serial.println("Backward");
-    NeoPixel_SetColour(YELLOW);
+    NeoPixel_SetColour(BLUE);
     Motor_Control(-50, -50);    // send 50% power to drive base
   } 
   else if (!strcmp(variable, "stop")) {
@@ -315,6 +341,7 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   } 
   else {
     Serial.println("Stop");
+    NeoPixel_SetColour(YELLOW);
     Motor_STOP();
     res = -1;
   }
