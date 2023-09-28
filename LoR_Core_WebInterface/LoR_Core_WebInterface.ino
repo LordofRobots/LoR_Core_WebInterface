@@ -145,10 +145,12 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         margin: 0 auto;
         padding-top: 30px;
       }
+
       h1 {
         color: #000000;
-        margin: 50px auto 30px;  
+        margin: 50px auto 10px;
       }
+
       h3 {
         color: #001844;
         margin-bottom: 50px;
@@ -158,12 +160,10 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         background-color: #003087;
         width: 120px;
         height: 80px;
-        border: none;
         color: white;
         font-size: 20px;
         font-weight: bold;
         text-align: center;
-        text-decoration: none;
         border-radius: 5px;
         display: inline-block;
         margin: 6px 6px;
@@ -178,12 +178,63 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         user-select: none;
         /* Likely future */
       }
-      
+
       .button:active {
-        background-color: white; /* Change background color when pressed */
+        background-color: #e6ebf3;
+        /* Change background color when pressed */
         color: #003087;
         border: 2px solid;
         border-color: #003087;
+      }
+
+      .slider {
+        position: relative;
+        display: inline-block;
+        cursor: pointer;
+        width: 80px;
+        height: 40px;
+        border-radius: 50px;
+        background-color: #e6ebf3;
+        border: 2px solid #003087;
+        margin-left: 275px;
+        margin-bottom: 40px;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "L";
+        font-weight: bold;
+        color: white;
+        line-height: 30px;
+        vertical-align: middle;
+        border-radius: 50%;
+        height: 30px;
+        width: 30px;
+        left: 5px;
+        bottom: 5px;
+        background-color: #003087;
+        -webkit-transition: .4s;
+        transition: .4s;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+      
+      input:checked+.slider {
+        background-color: #003087;
+        transition: 0.4s;
+      }
+
+      input:checked+.slider:before {
+        content: 'H';
+        color: #003087;
+        background-color: white;
+        -webkit-transform: translateX(40px);
+        -ms-transform: translateX(40px);
+        transform: translateX(40px);
       }
 
       #buttons {
@@ -196,6 +247,11 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     <h1>LoR MiniBots</h1>
     <h3>Web Control Interface</h3>
     <div id="buttons">
+      <label class="switch">
+        <input type="checkbox" id="toggle-switch">
+        <span class="slider round"></span>
+      </label>
+      <br>
       <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button>
       <br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()">Left</button>
@@ -236,12 +292,25 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       document.addEventListener('keyup', function(event) {
         releaseData();
       });
+      const toggleSwitch = document.getElementById("toggle-switch");
+      toggleSwitch.addEventListener("change", function() {
+        if (toggleSwitch.checked) {
+          sendData('high'); // Send "high" when checked
+        } else {
+          sendData('low'); // Send "low" when unchecked
+        }
+      });
     </script>
   </body>
-</html> 
+</html>
 )rawliteral";
 
-// Function to start the camera server
+
+//====================================================
+//===                  Server                      ===
+//====================================================
+
+// Function to start the server
 httpd_handle_t Robot_httpd = NULL;
 void startServer() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
@@ -280,6 +349,10 @@ static esp_err_t index_handler(httpd_req_t *req) {
 }
 
 // HTTP handler for processing robot movement commands
+int high = 90;
+int low = 50;
+int speed = low;    // default speed
+
 static esp_err_t cmd_handler(httpd_req_t *req) {
   char *buf;
   size_t buf_len;
@@ -313,26 +386,37 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   }
 
   int res = 0;
-  int LED_Max = 50;
-  if (!strcmp(variable, "forward")) {
-    Serial.println("Forward");
+
+  if (!strcmp(variable, "high")) {
+    Serial.println("High");
+    speed = high;
+    Serial.println(speed);
+  }
+  else if (!strcmp(variable, "low")) {
+    Serial.println("Low");
+    speed = low;
+    Serial.println(speed);
+  }  
+  else if (!strcmp(variable, "forward")) {
+    Serial.println("Forward ");
+    Serial.println(speed);
     NeoPixel_SetColour(GREEN);
-    Motor_Control(50, 50);      // send 50% power to drive base
+    Motor_Control(speed, speed);      // send 90% power to drive base
   } 
   else if (!strcmp(variable, "left")) {
     Serial.println("Left");
     NeoPixel_SetColour(PURPLE);   
-    Motor_Control(-50, 50);     // send 50% power to drive base
+    Motor_Control(-speed, speed);     // send 90% power to drive base
   } 
   else if (!strcmp(variable, "right")) {
     Serial.println("Right");
     NeoPixel_SetColour(CYAN);
-    Motor_Control(50, -50);     // send 50% power to drive base
+    Motor_Control(speed, -speed);     // send 90% power to drive base
   } 
   else if (!strcmp(variable, "backward")) {
     Serial.println("Backward");
     NeoPixel_SetColour(BLUE);
-    Motor_Control(-50, -50);    // send 50% power to drive base
+    Motor_Control(-speed, -speed);    // send 90% power to drive base
   } 
   else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
