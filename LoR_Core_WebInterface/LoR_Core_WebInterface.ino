@@ -150,31 +150,35 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no\">
     <style>
       body {
-        font-family: Helvetica;
+        font-family: Arial;
         text-align: center;
         margin: 0 auto;
         padding-top: 30px;
+        background-color: #001336;
       }
 
       h1 {
-        color: #000000;
-        margin: 20px auto 10px;
+        color: white;
+        margin: 20px auto 50px;
       }
 
       h3 {
-        color: #001844;
-        margin-bottom: 50px;
+        color: #b3c1db;
+        margin-bottom: 20px;
+        font-style: italic;
       }
 
       .button {
-        background-color: #003087;
+        background-color: #b3c1db;
         width: 120px;
         height: 80px;
-        color: white;
+        color: #001336;
         font-size: 20px;
         font-weight: bold;
         text-align: center;
         border-radius: 5px;
+        border: 3px solid;
+        border-color: white;
         display: inline-block;
         margin: 6px 6px;
         cursor: pointer;
@@ -190,40 +194,39 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       }
 
       .button:active {
-        background-color: #e6ebf3;
+        background-color: #001336;
         /* Change background color when pressed */
-        color: #003087;
-        border: 2px solid;
-        border-color: #003087;
+        color: #ccd6e7;
+        border: 3px solid white;
       }
 
       .slider {
         position: relative;
         display: inline-block;
-        style="-webkit-tap-highlight-color: transparent;"
+        -webkit-tap-highlight-color: transparent;
         cursor: pointer;
-        width: 80px;
+        width: 100px;
         height: 40px;
         border-radius: 50px;
-        background-color: #e6ebf3;
-        border: 2px solid #003087;
-        margin-left: 275px;
+        background-color: #001336;
+        border: 3px solid white;
+        margin-left: 260px;
         margin-bottom: 40px;
       }
 
       .slider:before {
         position: absolute;
-        content: "L";
-        font-weight: bold;
-        color: white;
+        content: "Low";
+        font-style: italic;
+        color: #001336;
         line-height: 30px;
         vertical-align: middle;
-        border-radius: 50%;
+        border-radius: 50px;
         height: 30px;
-        width: 30px;
+        width: 50px;
         left: 5px;
         bottom: 5px;
-        background-color: #003087;
+        background-color: #ccd6e7;
         -webkit-transition: .4s;
         transition: .4s;
       }
@@ -233,16 +236,9 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         width: 0;
         height: 0;
       }
-      
-      input:checked+.slider {
-        background-color: #003087;
-        transition: 0.4s;
-      }
 
       input:checked+.slider:before {
-        content: 'H';
-        color: #003087;
-        background-color: white;
+        content: 'High';
         -webkit-transform: translateX(40px);
         -ms-transform: translateX(40px);
         transform: translateX(40px);
@@ -254,22 +250,22 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       }
     </style>
   </head>
-  <body style="background-color:white;" oncontextmenu="return false;">
-    <h1>LoR MiniBots</h1>
-    <h3>Web Control Interface</h3>
+  <body oncontextmenu="return false;">
+    <h3>LordOfRobots</h3>
+    <h1>MiniBot Control Interface</h1>
     <div id="buttons">
       <label class="switch">
         <input type="checkbox" id="toggle-switch">
-        <span class="slider round"></span>
+        <span class="slider"></span>
       </label>
       <br>
-      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button>
+      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()" id="forward-button">Forward</button>
       <br>
-      <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()">Left</button>
-      <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()">Stop</button>
-      <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()">Right</button>
+      <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()" id="left-button">Left</button>
+      <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()" id="stop-button">Stop</button>
+      <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()" id="right-button">Right</button>
       <br>
-      <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()">Backward</button>
+      <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()" id="backward-button">Backward</button>
     </div>
     <script>
       var isButtonPressed = false; // Add this flag
@@ -283,6 +279,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         isButtonPressed = false; // A button has been released
         sendData('stop');
       }
+
       const keyMap = {
         'ArrowUp': 'forward',
         'ArrowLeft': 'left',
@@ -292,8 +289,8 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyA': 'left',
         'KeyS': 'backward',
         'KeyD': 'right',
+        'KeyH': 'high',
         'KeyL': 'low',
-        'KeyK': 'high',
       };
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
