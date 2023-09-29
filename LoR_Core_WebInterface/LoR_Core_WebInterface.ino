@@ -19,9 +19,19 @@
 // version control and major control function settings
 String Version = "Base Version : LoR Core Web Interface : 0.0.0";
 
+//====================================================
+//===         Customizable Parameters              ===
+//====================================================
+
 // SSID & Password Definitions
-const String ssid = "MiniBot-";
+const String ssid = "MiniBot";
 const String password = "password";
+
+// Drive Speeds (0%-100%)
+int highSpeed = 90;
+int lowSpeed = 50;
+
+//====================================================
 
 // IO Interface Definitions
 #define LED_DataPin 12
@@ -68,9 +78,9 @@ const int PWM_RESOLUTION = 8;
 //===              Motor Controls                  ===
 //====================================================
 
-/// Function to control motor output 
+/// Function to control motor output
 // Motor speed limits and starting speed
-const int MIN_STARTING_SPEED = 140;
+const int MIN_STARTING_SPEED = 150;
 const int MAX_SPEED = 255;
 const int STOP = 0;
 void Set_Motor_Output(int Output, int Motor_ChA, int Motor_ChB) {
@@ -148,7 +158,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 
       h1 {
         color: #000000;
-        margin: 50px auto 10px;
+        margin: 20px auto 10px;
       }
 
       h3 {
@@ -190,6 +200,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       .slider {
         position: relative;
         display: inline-block;
+        style="-webkit-tap-highlight-color: transparent;"
         cursor: pointer;
         width: 80px;
         height: 40px;
@@ -281,6 +292,8 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyA': 'left',
         'KeyS': 'backward',
         'KeyD': 'right',
+        'KeyL': 'low',
+        'KeyK': 'high',
       };
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
@@ -349,9 +362,8 @@ static esp_err_t index_handler(httpd_req_t *req) {
 }
 
 // HTTP handler for processing robot movement commands
-int high = 90;
-int low = 50;
-int speed = low;    // default speed
+int driveSpeed = lowSpeed;  // default speed
+String speed = "low";
 
 static esp_err_t cmd_handler(httpd_req_t *req) {
   char *buf;
@@ -389,43 +401,35 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
 
   if (!strcmp(variable, "high")) {
     Serial.println("High");
-    speed = high;
-    Serial.println(speed);
-  }
-  else if (!strcmp(variable, "low")) {
+    driveSpeed = highSpeed;
+    speed = "High";
+  } else if (!strcmp(variable, "low")) {
     Serial.println("Low");
-    speed = low;
-    Serial.println(speed);
-  }  
-  else if (!strcmp(variable, "forward")) {
-    Serial.println("Forward ");
-    Serial.println(speed);
+    driveSpeed = lowSpeed;
+    speed = "Low";
+  } else if (!strcmp(variable, "forward")) {
+    Serial.println("Forward " + speed);
     NeoPixel_SetColour(GREEN);
-    Motor_Control(speed, speed);      // send 90% power to drive base
-  } 
-  else if (!strcmp(variable, "left")) {
-    Serial.println("Left");
-    NeoPixel_SetColour(PURPLE);   
-    Motor_Control(-speed, speed);     // send 90% power to drive base
-  } 
-  else if (!strcmp(variable, "right")) {
-    Serial.println("Right");
+    Motor_Control(driveSpeed, driveSpeed);  // send 90% power to drive base
+  } else if (!strcmp(variable, "left")) {
+    Serial.println("Left " + speed);
+    NeoPixel_SetColour(PURPLE);
+    Motor_Control(-driveSpeed, driveSpeed);  // send 90% power to drive base
+  } else if (!strcmp(variable, "right")) {
+    Serial.println("Right " + speed);
     NeoPixel_SetColour(CYAN);
-    Motor_Control(speed, -speed);     // send 90% power to drive base
-  } 
-  else if (!strcmp(variable, "backward")) {
-    Serial.println("Backward");
+    Motor_Control(driveSpeed, -driveSpeed);  // send 90% power to drive base
+  } else if (!strcmp(variable, "backward")) {
+    Serial.println("Backward " + speed);
     NeoPixel_SetColour(BLUE);
-    Motor_Control(-speed, -speed);    // send 90% power to drive base
-  } 
-  else if (!strcmp(variable, "stop")) {
-    Serial.println("Stop");
-    NeoPixel_SetColour(RED);
-    Motor_STOP();
-  } 
-  else {
+    Motor_Control(-driveSpeed, -driveSpeed);  // send 90% power to drive base
+  } else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
     NeoPixel_SetColour(YELLOW);
+    Motor_STOP();
+  } else {
+    Serial.println("Stop");
+    NeoPixel_SetColour(RED);
     Motor_STOP();
     res = -1;
   }
