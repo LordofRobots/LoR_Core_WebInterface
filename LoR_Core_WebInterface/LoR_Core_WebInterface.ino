@@ -150,7 +150,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no\">
     <style>
       body {
-        font-family: Arial;
         text-align: center;
         margin: 0 auto;
         padding-top: 30px;
@@ -158,6 +157,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       }
 
       h1 {
+        font-family: Monospace;
         color: white;
         margin: 20px auto 50px;
       }
@@ -170,8 +170,8 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 
       .button {
         background-color: #b3c1db;
-        width: 120px;
-        height: 80px;
+        width: 100px;
+        height: 75px;
         color: #001336;
         font-size: 20px;
         font-weight: bold;
@@ -210,8 +210,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         border-radius: 50px;
         background-color: #001336;
         border: 3px solid white;
-        margin-left: 260px;
-        margin-bottom: 40px;
+        margin-bottom: 20px;
       }
 
       .slider:before {
@@ -245,27 +244,48 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       }
 
       #buttons {
+        display: inline-block;
         text-align: center;
-        margin-left: 0px;
       }
+      
+      .emptySpace {
+        width: 100px;
+        height: 30px;
+        display: inline-block;
+        margin: 6px 6px;
+      }
+      
     </style>
   </head>
   <body oncontextmenu="return false;">
-    <h3>LordOfRobots</h3>
+    <h3>LORD of ROBOTS</h3>
     <h1>MiniBot Control Interface</h1>
+    <p style="color: white; font-family: Monospace; font-size: 15px">Drive Speed</p>
+    <label class="switch">
+      <input type="checkbox" id="toggle-switch">
+      <span class="slider"></span>
+    </label>
+    <br>
     <div id="buttons">
-      <label class="switch">
-        <input type="checkbox" id="toggle-switch">
-        <span class="slider"></span>
-      </label>
-      <br>
       <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()" id="forward-button">Forward</button>
       <br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()" id="left-button">Left</button>
       <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()" id="stop-button">Stop</button>
       <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()" id="right-button">Right</button>
       <br>
-      <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()" id="backward-button">Backward</button>
+      <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()" id="backward-button">Back</button>
+    </div>
+    <div class="emptySpace" style="width: 75px; height: 25px"></div>
+    <div id="buttons">
+      <br>
+      <button class="button" onpointerdown="sendData('functionY')" onpointerup="releaseData()" id="functionY">Y</button>
+      <br>
+      <button class="button" onpointerdown="sendData('functionX')" onpointerup="releaseData()" id="functionX">X</button>
+      <div class="emptySpace"></div>
+      <button class="button" onpointerdown="sendData('functionA')" onpointerup="releaseData()" id="functionA">A</button>
+      <br>
+      <button class="button" onpointerdown="sendData('functionB')" onpointerup="releaseData()" id="functionB">B</button>
+      <br>
     </div>
     <script>
       var isButtonPressed = false; // Add this flag
@@ -279,7 +299,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         isButtonPressed = false; // A button has been released
         sendData('stop');
       }
-
       const keyMap = {
         'ArrowUp': 'forward',
         'ArrowLeft': 'left',
@@ -289,8 +308,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyA': 'left',
         'KeyS': 'backward',
         'KeyD': 'right',
-        'KeyH': 'high',
-        'KeyL': 'low',
       };
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
@@ -424,6 +441,14 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     Serial.println("Stop");
     NeoPixel_SetColour(YELLOW);
     Motor_STOP();
+  } else if (!strcmp(variable, "functionY")) {
+    Serial.println("Function Y");
+  } else if (!strcmp(variable, "functionX")) {
+    Serial.println("FUnction X");
+  } else if (!strcmp(variable, "functionB")) {
+    Serial.println("Function B");
+  } else if (!strcmp(variable, "functionA")) {
+    Serial.println("Function A");
   } else {
     Serial.println("Stop");
     NeoPixel_SetColour(RED);
