@@ -159,18 +159,18 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       h1 {
         font-family: Monospace;
         color: white;
-        margin: 20px auto 50px;
+        margin: 10px auto 50px;
       }
 
       h3 {
         color: #b3c1db;
-        margin-bottom: 20px;
+        margin-bottom: 10px;
         font-style: italic;
       }
 
       .button {
         background-color: #b3c1db;
-        width: 100px;
+        width: 110px;
         height: 75px;
         color: #001336;
         font-size: 20px;
@@ -195,7 +195,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 
       .button:active {
         background-color: #001336;
-        /* Change background color when pressed */
         color: #ccd6e7;
         border: 3px solid white;
       }
@@ -204,19 +203,21 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         position: relative;
         display: inline-block;
         -webkit-tap-highlight-color: transparent;
+        vertical-align: top;
         cursor: pointer;
         width: 100px;
         height: 40px;
         border-radius: 50px;
         background-color: #001336;
         border: 3px solid white;
-        margin-bottom: 20px;
       }
 
       .slider:before {
         position: absolute;
         content: "Low";
         font-style: italic;
+        font-size: 14px;
+        font-weight: bold;
         color: #001336;
         line-height: 30px;
         vertical-align: middle;
@@ -238,9 +239,9 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 
       input:checked+.slider:before {
         content: 'High';
-        -webkit-transform: translateX(40px);
-        -ms-transform: translateX(40px);
-        transform: translateX(40px);
+        -webkit-transform: translateX(35px);
+        -ms-transform: translateX(35px);
+        transform: translateX(35px);
       }
 
       #buttons {
@@ -249,10 +250,10 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       }
       
       .emptySpace {
-        width: 100px;
-        height: 30px;
+        width: 50px;
+        height: 10px;
         display: inline-block;
-        margin: 6px 6px;
+        margin: 6px;
       }
       
     </style>
@@ -260,13 +261,15 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
   <body oncontextmenu="return false;">
     <h3>LORD of ROBOTS</h3>
     <h1>MiniBot Control Interface</h1>
-    <p style="color: white; font-family: Monospace; font-size: 15px">Drive Speed</p>
-    <label class="switch">
-      <input type="checkbox" id="toggle-switch">
-      <span class="slider"></span>
-    </label>
+    <div>
+      <p style="color: white; margin-bottom: 5px;">Drive Speed</p>
+      <label class="switch">
+        <input type="checkbox" id="toggle-switch">
+        <span class="slider"></span>
+      </label>  
+    </div>
     <br>
-    <div id="buttons">
+    <div id="buttons" style="margin-bottom: 50px">
       <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()" id="forward-button">Forward</button>
       <br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()" id="left-button">Left</button>
@@ -275,17 +278,16 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       <br>
       <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()" id="backward-button">Back</button>
     </div>
-    <div class="emptySpace" style="width: 75px; height: 25px"></div>
-    <div id="buttons">
-      <br>
-      <button class="button" onpointerdown="sendData('functionY')" onpointerup="releaseData()" id="functionY">Y</button>
-      <br>
-      <button class="button" onpointerdown="sendData('functionX')" onpointerup="releaseData()" id="functionX">X</button>
+    <div id="buttons" style="vertical-align: 50px">
       <div class="emptySpace"></div>
       <button class="button" onpointerdown="sendData('functionA')" onpointerup="releaseData()" id="functionA">A</button>
-      <br>
       <button class="button" onpointerdown="sendData('functionB')" onpointerup="releaseData()" id="functionB">B</button>
+      <div class="emptySpace"></div>
       <br>
+      <div class="emptySpace"></div>
+      <button class="button" onpointerdown="sendData('functionC')" onpointerup="releaseData()" id="functionC">C</button>
+      <button class="button" onpointerdown="sendData('functionD')" onpointerup="releaseData()" id="functionD">D</button>
+      <div class="emptySpace"></div>
     </div>
     <script>
       var isButtonPressed = false; // Add this flag
@@ -441,14 +443,14 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     Serial.println("Stop");
     NeoPixel_SetColour(YELLOW);
     Motor_STOP();
-  } else if (!strcmp(variable, "functionY")) {
-    Serial.println("Function Y");
-  } else if (!strcmp(variable, "functionX")) {
-    Serial.println("FUnction X");
-  } else if (!strcmp(variable, "functionB")) {
-    Serial.println("Function B");
   } else if (!strcmp(variable, "functionA")) {
     Serial.println("Function A");
+  } else if (!strcmp(variable, "functionB")) {
+    Serial.println("Function B");
+  } else if (!strcmp(variable, "functionC")) {
+    Serial.println("Function C");
+  } else if (!strcmp(variable, "functionD")) {
+    Serial.println("Function D");
   } else {
     Serial.println("Stop");
     NeoPixel_SetColour(RED);
