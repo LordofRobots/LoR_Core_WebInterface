@@ -159,7 +159,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       h1 {
         font-family: Monospace;
         color: white;
-        margin: 10px auto 50px;
+        margin: 10px auto 30px;
       }
 
       h3 {
@@ -253,7 +253,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         width: 50px;
         height: 10px;
         display: inline-block;
-        margin: 6px;
+        margin: 6px 6px;
       }
       
     </style>
@@ -261,16 +261,17 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
   <body oncontextmenu="return false;">
     <h3>LORD of ROBOTS</h3>
     <h1>MiniBot Control Interface</h1>
-    <div>
-      <p style="color: white; margin-bottom: 5px;">Drive Speed</p>
+    <div id="buttons" style="margin-bottom: 20px;">
+      <div class="emptySpace" style="width: 110px"></div>
+      <div class="emptySpace" style="width: 110px"></div>
+      <div class="emptySpace" style="color: white; width: 110px; vertical-align: top; text-align: center; margin-bottom: 15px;">Drive Speed</div>
+      <br>
+      <div class="emptySpace" style="width: 105px"></div>
+      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()" id="forward-button">Forward</button>
       <label class="switch">
         <input type="checkbox" id="toggle-switch">
         <span class="slider"></span>
-      </label>  
-    </div>
-    <br>
-    <div id="buttons" style="margin-bottom: 50px">
-      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()" id="forward-button">Forward</button>
+      </label>
       <br>
       <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()" id="left-button">Left</button>
       <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()" id="stop-button">Stop</button>
@@ -278,16 +279,13 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
       <br>
       <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()" id="backward-button">Back</button>
     </div>
+    <div class="emptySpace" style="width: 150px; height: 30px"></div>
     <div id="buttons" style="vertical-align: 50px">
-      <div class="emptySpace"></div>
       <button class="button" onpointerdown="sendData('functionA')" onpointerup="releaseData()" id="functionA">A</button>
       <button class="button" onpointerdown="sendData('functionB')" onpointerup="releaseData()" id="functionB">B</button>
-      <div class="emptySpace"></div>
       <br>
-      <div class="emptySpace"></div>
       <button class="button" onpointerdown="sendData('functionC')" onpointerup="releaseData()" id="functionC">C</button>
       <button class="button" onpointerdown="sendData('functionD')" onpointerup="releaseData()" id="functionD">D</button>
-      <div class="emptySpace"></div>
     </div>
     <script>
       var isButtonPressed = false; // Add this flag
