@@ -129,6 +129,7 @@ const uint32_t WHITE = strip.Color(0, 0, 0, 255);
 const uint32_t PURPLE = strip.Color(255, 0, 255, 0);
 const uint32_t CYAN = strip.Color(0, 255, 255, 0);
 const uint32_t YELLOW = strip.Color(255, 255, 0, 0);
+const uint32_t OFF = strip.Color(0, 0, 0, 0);
 
 // Set a specific color for the entire NeoPixel strip
 void NeoPixel_SetColour(uint32_t color) {
@@ -136,6 +137,26 @@ void NeoPixel_SetColour(uint32_t color) {
     strip.setPixelColor(i, color);               //  Set pixel's color (in RAM)
   }
   strip.show();  // Update strip with new contents
+}
+
+//====================================================
+//===          Custom Button Functions             ===
+//====================================================
+
+void functionA() {
+  // add your function for button A 
+}
+
+void functionB() {
+  // add your function for button B 
+}
+
+void functionC() {
+  // add your function for button C 
+}
+
+void functionD() {
+  // add your function for button D 
 }
 
 //====================================================
@@ -239,9 +260,9 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 
       input:checked+.slider:before {
         content: 'High';
-        -webkit-transform: translateX(35px);
-        -ms-transform: translateX(35px);
-        transform: translateX(35px);
+        -webkit-transform: translateX(40px);
+        -ms-transform: translateX(40px);
+        transform: translateX(40px);
       }
 
       #buttons {
@@ -414,11 +435,11 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   int res = 0;
 
   if (!strcmp(variable, "high")) {
-    Serial.println("High");
+    Serial.println("High Speed");
     driveSpeed = highSpeed;
     speed = "High";
   } else if (!strcmp(variable, "low")) {
-    Serial.println("Low");
+    Serial.println("Low Speed");
     driveSpeed = lowSpeed;
     speed = "Low";
   } else if (!strcmp(variable, "forward")) {
@@ -439,16 +460,20 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     Motor_Control(-driveSpeed, -driveSpeed);  // send 90% power to drive base
   } else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
-    NeoPixel_SetColour(YELLOW);
+    NeoPixel_SetColour(OFF);
     Motor_STOP();
   } else if (!strcmp(variable, "functionA")) {
     Serial.println("Function A");
+    functionA();
   } else if (!strcmp(variable, "functionB")) {
     Serial.println("Function B");
+    functionB();
   } else if (!strcmp(variable, "functionC")) {
     Serial.println("Function C");
+    functionC();
   } else if (!strcmp(variable, "functionD")) {
     Serial.println("Function D");
+    functionD();
   } else {
     Serial.println("Stop");
     NeoPixel_SetColour(RED);
