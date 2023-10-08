@@ -2,7 +2,7 @@
 
 **Link Tree :** [Useful Links to Web Pages and Documentation](https://linktr.ee/LordofRobots)
 
-This Arduino sketch serves as a comprehensive framework for remotely controlling a robot via a web interface. Utilizing libraries for WiFi, HTTP server, and Adafruit's NeoPixel, the code establishes the robot as a WiFi access point with the SSID 'MiniBot'. Users can connect to this network and access the web interface by navigating to the robot's local IP address (10.0.0.1) in a web browser or by using the mDNS address 'robot.local'.
+This Arduino sketch serves as a comprehensive framework for remotely controlling a MiniBot via a web interface. Utilizing libraries for WiFi, HTTP server, and Adafruit's NeoPixel, the code establishes the MiniBot as a WiFi access point with the SSID 'MiniBot'. Users can connect to this network and access the web interface by navigating to the MiniBot's local IP address (10.0.0.1) in a web browser or by using the mDNS address 'robot.local'.
 
 Once connected, the web interface provides buttons for directional control, speed settings, and custom functions. The code is structured to be modular and easily customizable. It includes adjustable parameters for setting high and low speeds for the robot's motors, which are controlled using PWM (Pulse Width Modulation). Additionally, the sketch features NeoPixel LED control, providing visual feedback based on the robot's actions.
 
@@ -16,7 +16,7 @@ The HTTP server is configured to listen on port 80 and includes URI handlers for
 - Sets the version and WiFi credentials for the robot.
 
 ### Customizable Parameters
-- Allows users to set high and low speeds for the robot's movement.
+- Allows users to set high and low speeds for the MiniBot's movement.
 
 ### Pin Definitions
 - Defines the GPIO pins used for LEDs, motors, and other peripherals.
