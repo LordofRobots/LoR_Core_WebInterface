@@ -393,6 +393,7 @@ void startServer() {
 // HTTP handler for serving the web page
 static esp_err_t index_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "text/html");
+  NeoPixel_SetColour(RED);
   return httpd_resp_send(req, (const char *)INDEX_HTML, strlen(INDEX_HTML));
 }
 
@@ -433,6 +434,7 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   }
 
   int res = 0;
+  NeoPixel_SetColour(GREEN);
 
   if (!strcmp(variable, "high")) {
     Serial.println("High Speed");
@@ -444,35 +446,35 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     speed = "Low";
   } else if (!strcmp(variable, "forward")) {
     Serial.println("Forward " + speed);
-    NeoPixel_SetColour(GREEN);
     Motor_Control(driveSpeed, driveSpeed);  // send 90% power to drive base
   } else if (!strcmp(variable, "left")) {
     Serial.println("Left " + speed);
-    NeoPixel_SetColour(PURPLE);
     Motor_Control(-driveSpeed, driveSpeed);  // send 90% power to drive base
   } else if (!strcmp(variable, "right")) {
     Serial.println("Right " + speed);
-    NeoPixel_SetColour(CYAN);
     Motor_Control(driveSpeed, -driveSpeed);  // send 90% power to drive base
   } else if (!strcmp(variable, "backward")) {
     Serial.println("Backward " + speed);
-    NeoPixel_SetColour(BLUE);
     Motor_Control(-driveSpeed, -driveSpeed);  // send 90% power to drive base
   } else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
-    NeoPixel_SetColour(OFF);
+    NeoPixel_SetColour(RED);
     Motor_STOP();
   } else if (!strcmp(variable, "functionA")) {
     Serial.println("Function A");
+    NeoPixel_SetColour(CYAN);
     functionA();
   } else if (!strcmp(variable, "functionB")) {
     Serial.println("Function B");
+    NeoPixel_SetColour(CYAN);
     functionB();
   } else if (!strcmp(variable, "functionC")) {
     Serial.println("Function C");
+    NeoPixel_SetColour(CYAN);
     functionC();
   } else if (!strcmp(variable, "functionD")) {
     Serial.println("Function D");
+    NeoPixel_SetColour(CYAN);
     functionD();
   } else {
     Serial.println("Stop");
@@ -489,6 +491,24 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
+
+// Tones created in the motors. Cycle through each motor.
+void Start_Tone() {
+  for (int i = 0; i < 6; i++) {
+    long ToneTime = millis() + 200;
+    bool state = 0;
+    while (millis() < ToneTime) {
+      digitalWrite(motorPins_A[i], state);
+      digitalWrite(motorPins_B[i], !state);
+      state = !state;
+      long WaitTime = micros() + (100 * (i + 1));
+      while (micros() < WaitTime) {}
+    }
+    digitalWrite(motorPins_A[i], 0);
+    digitalWrite(motorPins_B[i], 0);
+    delay(50);
+  }
+}
 
 //====================================================
 //===              Wifi Setup                      ===
@@ -508,8 +528,6 @@ void WifiSetup() {
   if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
   MDNS.addService("http", "tcp", 80);
   Serial.println("WiFi start");
-  delay(3000);
-  Serial.println("MiniBot System Ready! Version = " + Version);
 }
 
 //====================================================
@@ -520,6 +538,12 @@ void WifiSetup() {
 void setup() {
   // Disable brownout detector
   WRITE_PERI_REG(RTC_CNTL_BROWN_OUT_REG, 0);  //disable brownout detector
+
+  // Serial comms configurations (USB for debug messages)
+  Serial.begin(115200);  // USB Serial
+  Serial.setDebugOutput(false);
+  delay(1000);
+  Serial.println("Serial Begin");
 
   // Set up the pins
   pinMode(LED_DataPin, OUTPUT);
@@ -537,6 +561,15 @@ void setup() {
   digitalWrite(LED_DataPin, 0);
   digitalWrite(MotorEnablePin, 1);
 
+  // Neopixels Configuration
+  strip.begin();            // INITIALIZE NeoPixel strip object
+  strip.show();             // Turn OFF all pixels ASAP
+  strip.setBrightness(50);  // Set BRIGHTNESS to about 1/5 (max = 255)
+
+  // Motor test tones
+  NeoPixel_SetColour(BLUE);
+  Start_Tone();
+
   // configure LED PWM functionalitites
   for (int i = 0; i < 6; i++) {
     ledcSetup(MOTOR_PWM_Channel_A[i], PWM_FREQUENCY, PWM_RESOLUTION);
@@ -545,17 +578,10 @@ void setup() {
     ledcAttachPin(motorPins_B[i], MOTOR_PWM_Channel_B[i]);
   }
 
-  // Neopixels Configuration
-  strip.begin();            // INITIALIZE NeoPixel strip object
-  strip.show();             // Turn OFF all pixels ASAP
-  strip.setBrightness(50);  // Set BRIGHTNESS to about 1/5 (max = 255)
-
-  // Serial comms configurations (USB for debug messages)
-  Serial.begin(115200);  // USB Serial
-  Serial.setDebugOutput(false);
-
   WifiSetup();
   startServer();
+  NeoPixel_SetColour(PURPLE);
+  Serial.println("MiniBot System Ready! Version = " + Version); 
 }
 
 
