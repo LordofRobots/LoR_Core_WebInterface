@@ -1,6 +1,13 @@
 # LoR_Core_WebInterface
 
-This Arduino sketch provides a complete solution for controlling a robot via a web interface. It includes WiFi setup, HTTP server initialization, and motor control using PWM. The web interface offers buttons for directional control and custom functions. Additionally, it features NeoPixel LED control for visual feedback. The code is modular and well-commented, making it easy to customize.
+Here is a link to helpful pages and more documentation: linktree.com/lordofrobots
+
+This Arduino sketch serves as a comprehensive framework for remotely controlling a robot via a web interface. Utilizing libraries for WiFi, HTTP server, and Adafruit's NeoPixel, the code establishes the robot as a WiFi access point with the SSID 'MiniBot'. Users can connect to this network and access the web interface by navigating to the robot's local IP address (10.0.0.1) in a web browser or by using the mDNS address 'robot.local'.
+
+Once connected, the web interface provides buttons for directional control, speed settings, and custom functions. The code is structured to be modular and easily customizable. It includes adjustable parameters for setting high and low speeds for the robot's motors, which are controlled using PWM (Pulse Width Modulation). Additionally, the sketch features NeoPixel LED control, providing visual feedback based on the robot's actions.
+
+The HTTP server is configured to listen on port 80 and includes URI handlers for serving the web interface and processing incoming commands. All actions are event-driven, making the system highly responsive. The code is well-commented, facilitating easy modifications and feature additions.
+
 
 # Code content:
 
