@@ -19,24 +19,19 @@
 // version control and major control function settings
 String Version = "Base Version : LoR Core Web Interface : 0.0.0";
 
-<<<<<<< Updated upstream
-// Pin definitions and other constants
-#define PART_BOUNDARY "123456789000000000000987654321"
-=======
 //====================================================
 //===         Customizable Parameters              ===
 //====================================================
 
 // SSID & Password Definitions
-const String ssid = "MiniBot";          
-const String password = "password";     
+const String ssid = "MiniBot";
+const String password = "password";
 
 // Drive Speeds (0%-100%)
 int highSpeed = 90;
 int lowSpeed = 50;
 
 //====================================================
->>>>>>> Stashed changes
 
 // IO Interface Definitions
 #define LED_DataPin 12
@@ -78,53 +73,103 @@ const int MOTOR_PWM_Channel_B[] = { Motor_M1_B, Motor_M2_B, Motor_M3_B, Motor_M4
 const int PWM_FREQUENCY = 20000;
 const int PWM_RESOLUTION = 8;
 
-// WiFi configuration of SSID
-const char *ssid = "MiniBot-";
 
-// Global variables for HTTP server instances
-// static const char *_STREAM_CONTENT_TYPE = "multipart/x-mixed-replace;boundary=" PART_BOUNDARY;
-// static const char *_STREAM_BOUNDARY = "\r\n--" PART_BOUNDARY "\r\n";
-// static const char *_STREAM_PART = "Content-Type: image/jpeg\r\nContent-Length: %u\r\n\r\n";
+//====================================================
+//===              Motor Controls                  ===
+//====================================================
 
- httpd_handle_t Robot_httpd = NULL;
-// httpd_handle_t stream_httpd = NULL;
-
-// Function to convert MAC address to string format. MAC address of the ESP32 in format "XX:XX:XX:XX:XX:XX"
-String UniqueID() {
-  uint8_t mac[6];
-  esp_read_mac(mac, ESP_MAC_WIFI_STA);  // Get unique MAC address
-  char buffer[13];                      // Save MAC address to string
-  sprintf(buffer, "%02X%02X%02X%02X%02X%02X", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
-  String uniqueID = buffer;
-  uniqueID = uniqueID.substring(6, 12);  // limit to last 6 digits
-  return uniqueID;
-}
-
-String PasswordGen() {
-  String uniqueID = UniqueID();
-  String mixedString = "";
-  for (int i = 0; i < 6; i++) {
-    char uniqueChar = uniqueID.charAt(i);
-    char MINIBOTChar = "MINIBOT"[i];
-    int mixedValue = (uniqueChar - '0') + (MINIBOTChar - 'A') + i;
-    mixedValue %= 16;  // limit to single hex digit
-    mixedString += (char)((mixedValue < 10) ? ('0' + mixedValue) : ('A' + mixedValue - 10));
+/// Function to control motor output
+// Motor speed limits and starting speed
+const int MIN_STARTING_SPEED = 150;
+const int MAX_SPEED = 255;
+const int STOP = 0;
+void Set_Motor_Output(int Output, int Motor_ChA, int Motor_ChB) {
+  int Mapped_Value = map(abs(Output), 0, 100, MIN_STARTING_SPEED, MAX_SPEED);
+  int A, B = 0;
+  if (Output < 0) {  // Rotate Clockwise
+    A = 0;
+    B = Mapped_Value;
+  } else if (Output > 0) {  // Rotate Counter-Clockwise
+    A = Mapped_Value;
+    B = 0;
+  } else {  // Rotation Stop
+    A = STOP;
+    B = STOP;
   }
-  mixedString = "LoR" + mixedString;
-  return mixedString;
+  ledcWrite(Motor_ChA, A);  //send to motor control pins
+  ledcWrite(Motor_ChB, B);
 }
-const String SystemPassword = String(PasswordGen());
+
+// configure motor output
+void Motor_Control(int Left_Drive_Power, int Right_Drive_Power) {
+  Set_Motor_Output(Left_Drive_Power, Motor_M1_A, Motor_M1_B);
+  Set_Motor_Output(Left_Drive_Power, Motor_M2_A, Motor_M2_B);
+  Set_Motor_Output(-Right_Drive_Power, Motor_M5_A, Motor_M5_B);
+  Set_Motor_Output(-Right_Drive_Power, Motor_M6_A, Motor_M6_B);
+}
+
+// stop motors from spinning
+void Motor_STOP() {
+  Set_Motor_Output(STOP, Motor_M1_A, Motor_M1_B);
+  Set_Motor_Output(STOP, Motor_M2_A, Motor_M2_B);
+  Set_Motor_Output(STOP, Motor_M5_A, Motor_M5_B);
+  Set_Motor_Output(STOP, Motor_M6_A, Motor_M6_B);
+}
+
+//====================================================
+//===              NeoPixels                       ===
+//====================================================
+
+// NeoPixel Configurations
+Adafruit_NeoPixel strip(LED_COUNT, LED_DataPin, NEO_GRB + NEO_KHZ800);
+const uint32_t RED = strip.Color(255, 0, 0, 0);
+const uint32_t GREEN = strip.Color(0, 255, 0, 0);
+const uint32_t BLUE = strip.Color(0, 0, 255, 0);
+const uint32_t WHITE = strip.Color(0, 0, 0, 255);
+const uint32_t PURPLE = strip.Color(255, 0, 255, 0);
+const uint32_t CYAN = strip.Color(0, 255, 255, 0);
+const uint32_t YELLOW = strip.Color(255, 255, 0, 0);
+const uint32_t OFF = strip.Color(0, 0, 0, 0);
+
+// Set a specific color for the entire NeoPixel strip
+void NeoPixel_SetColour(uint32_t color) {
+  for (int i = 0; i < strip.numPixels(); i++) {  // For each pixel in strip...
+    strip.setPixelColor(i, color);               //  Set pixel's color (in RAM)
+  }
+  strip.show();  // Update strip with new contents
+}
+
+//====================================================
+//===          Custom Button Functions             ===
+//====================================================
+
+void functionA() {
+  // add your function for button A 
+}
+
+void functionB() {
+  // add your function for button B 
+}
+
+void functionC() {
+  // add your function for button C 
+}
+
+void functionD() {
+  // add your function for button D 
+}
+
+//====================================================
+//===              Web Page                        ===
+//====================================================
 
 // Web page (HTML, CSS, JavaScript) for controlling the robot
 static const char PROGMEM INDEX_HTML[] = R"rawliteral(
-  <html>
+<html>
   <head>
     <title>LORD of ROBOTS</title>
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1" >
+    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0, user-scalable=no\">
     <style>
-<<<<<<< Updated upstream
-      body { font-family: Arial; text-align: center; margin:0 auto; padding-top: 30px;}
-=======
       body {
         text-align: center;
         margin: 0 auto;
@@ -134,7 +179,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
 
       h1 {
         font-family: Monospace;
-        font-size: 24px;
         color: white;
         margin: 10px auto 30px;
       }
@@ -143,46 +187,129 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         color: #b3c1db;
         margin-bottom: 10px;
         font-style: italic;
-        font-size: 18px;
       }
 
->>>>>>> Stashed changes
       .button {
-        background-color: #2f4468;
-        width: 100px;
-        height: 80px;
-        border: none;
-        color: white;
+        background-color: #b3c1db;
+        width: 110px;
+        height: 75px;
+        color: #001336;
         font-size: 20px;
         font-weight: bold;
         text-align: center;
-        text-decoration: none;
-        border-radius: 10px;
+        border-radius: 5px;
+        border: 3px solid;
+        border-color: white;
         display: inline-block;
         margin: 6px 6px;
         cursor: pointer;
-        -webkit-tap-highlight-color: rgba(0,0,0,0);
-        -webkit-user-select: none; /* Chrome, Safari, Opera */
-        -moz-user-select: none; /* Firefox all */
-        -ms-user-select: none; /* IE 10+ */
-        user-select: none; /* Likely future */
+        -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
+        -webkit-user-select: none;
+        /* Chrome, Safari, Opera */
+        -moz-user-select: none;
+        /* Firefox all */
+        -ms-user-select: none;
+        /* IE 10+ */
+        user-select: none;
+        /* Likely future */
+      }
+
+      .button:active {
+        background-color: #001336;
+        color: #ccd6e7;
+        border: 3px solid white;
+      }
+
+      .slider {
+        position: relative;
+        display: inline-block;
+        -webkit-tap-highlight-color: transparent;
+        vertical-align: top;
+        cursor: pointer;
+        width: 100px;
+        height: 40px;
+        border-radius: 50px;
+        background-color: #001336;
+        border: 3px solid white;
+      }
+
+      .slider:before {
+        position: absolute;
+        content: "Low";
+        font-style: italic;
+        font-size: 14px;
+        font-weight: bold;
+        color: #001336;
+        line-height: 30px;
+        vertical-align: middle;
+        border-radius: 50px;
+        height: 30px;
+        width: 50px;
+        left: 5px;
+        bottom: 5px;
+        background-color: #ccd6e7;
+        -webkit-transition: .4s;
+        transition: .4s;
+      }
+
+      .switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+      }
+
+      input:checked+.slider:before {
+        content: 'High';
+        -webkit-transform: translateX(40px);
+        -ms-transform: translateX(40px);
+        transform: translateX(40px);
+      }
+
+      #buttons {
+        display: inline-block;
+        text-align: center;
       }
       
-      #buttons { text-align: center; }
+      .emptySpace {
+        width: 50px;
+        height: 10px;
+        display: inline-block;
+        margin: 6px 6px;
+      }
+      
     </style>
   </head>
-  <body style="background-color:black;" oncontextmenu="return false;">
-    <h1 style="color:white">MiniBot Control</h1>
-    <div id="buttons">
-      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()">Forward</button><br>
-      <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()">Left</button>
-      <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()">Stop</button>
-      <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()">Right</button><br>
-      <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()">Backward</button>
- </div>
+  <body oncontextmenu="return false;">
+    <h3>LORD of ROBOTS</h3>
+    <h1>MiniBot Control Interface</h1>
+    <div id="buttons" style="margin-bottom: 20px;">
+      <div class="emptySpace" style="width: 110px"></div>
+      <div class="emptySpace" style="width: 110px"></div>
+      <div class="emptySpace" style="color: white; width: 110px; vertical-align: top; text-align: center; margin-bottom: 15px;">Drive Speed</div>
+      <br>
+      <div class="emptySpace" style="width: 105px"></div>
+      <button class="button" onpointerdown="sendData('forward')" onpointerup="releaseData()" id="forward-button">Forward</button>
+      <label class="switch">
+        <input type="checkbox" id="toggle-switch">
+        <span class="slider"></span>
+      </label>
+      <br>
+      <button class="button" onpointerdown="sendData('left')" onpointerup="releaseData()" id="left-button">Left</button>
+      <button class="button" onpointerdown="sendData('stop')" onpointerup="releaseData()" id="stop-button">Stop</button>
+      <button class="button" onpointerdown="sendData('right')" onpointerup="releaseData()" id="right-button">Right</button>
+      <br>
+      <button class="button" onpointerdown="sendData('backward')" onpointerup="releaseData()" id="backward-button">Back</button>
+    </div>
+    <div class="emptySpace" style="width: 150px; height: 30px"></div>
+    <div id="buttons" style="vertical-align: 50px">
+      <button class="button" onpointerdown="sendData('functionA')" onpointerup="releaseData()" id="functionA">A</button>
+      <button class="button" onpointerdown="sendData('functionB')" onpointerup="releaseData()" id="functionB">B</button>
+      <br>
+      <button class="button" onpointerdown="sendData('functionC')" onpointerup="releaseData()" id="functionC">C</button>
+      <button class="button" onpointerdown="sendData('functionD')" onpointerup="releaseData()" id="functionD">D</button>
+    </div>
     <script>
       var isButtonPressed = false; // Add this flag
-
       function sendData(x) {
         var xhr = new XMLHttpRequest();
         xhr.open("GET", "/action?go=" + x, true);
@@ -193,7 +320,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         isButtonPressed = false; // A button has been released
         sendData('stop');
       }
-
       const keyMap = {
         'ArrowUp': 'forward',
         'ArrowLeft': 'left',
@@ -204,7 +330,6 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyS': 'backward',
         'KeyD': 'right',
       };
-
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
           const action = keyMap[event.code];
@@ -212,20 +337,29 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
           isButtonPressed = true; // A button has been pressed
         }
       });
-
       document.addEventListener('keyup', function(event) {
-         releaseData();
+        releaseData();
       });
-
-      window.onload = function() {
-        document.getElementById("photo").src = window.location.href.slice(0, -1) + ":81/stream";
-      }
+      const toggleSwitch = document.getElementById("toggle-switch");
+      toggleSwitch.addEventListener("change", function() {
+        if (toggleSwitch.checked) {
+          sendData('high'); // Send "high" when checked
+        } else {
+          sendData('low'); // Send "low" when unchecked
+        }
+      });
     </script>
   </body>
 </html>
 )rawliteral";
 
-// Function to start the camera server
+
+//====================================================
+//===                  Server                      ===
+//====================================================
+
+// Function to start the server
+httpd_handle_t Robot_httpd = NULL;
 void startServer() {
   httpd_config_t config = HTTPD_DEFAULT_CONFIG();
   config.server_port = 80;
@@ -252,6 +386,10 @@ void startServer() {
 }
 
 
+//====================================================
+//===                Handlers                      ===
+//====================================================
+
 // HTTP handler for serving the web page
 static esp_err_t index_handler(httpd_req_t *req) {
   httpd_resp_set_type(req, "text/html");
@@ -260,6 +398,9 @@ static esp_err_t index_handler(httpd_req_t *req) {
 }
 
 // HTTP handler for processing robot movement commands
+int driveSpeed = lowSpeed;  // default speed
+String speed = "low";
+
 static esp_err_t cmd_handler(httpd_req_t *req) {
   char *buf;
   size_t buf_len;
@@ -293,19 +434,6 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   }
 
   int res = 0;
-<<<<<<< Updated upstream
-  int LED_Max = 50;
-  if (!strcmp(variable, "forward")) {
-    Serial.println("Forward");
-  } else if (!strcmp(variable, "left")) {
-    Serial.println("Left");
-  } else if (!strcmp(variable, "right")) {
-    Serial.println("Right");
-  } else if (!strcmp(variable, "backward")) {
-    Serial.println("Backward");
-  } else if (!strcmp(variable, "stop")) {
-    Serial.println("Stop");
-=======
   NeoPixel_SetColour(GREEN);
 
   if (!strcmp(variable, "high")) {
@@ -348,9 +476,10 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     Serial.println("Function D");
     NeoPixel_SetColour(CYAN);
     functionD();
->>>>>>> Stashed changes
   } else {
     Serial.println("Stop");
+    NeoPixel_SetColour(RED);
+    Motor_STOP();
     res = -1;
   }
 
@@ -362,12 +491,8 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   return httpd_resp_send(req, NULL, 0);
 }
 
-<<<<<<< Updated upstream
-=======
-//====================================================
-//===                               ===
-//====================================================
 
+// Tones created in the motors. Cycle through each motor.
 void Start_Tone() {
   for (int i = 0; i < 6; i++) {
     long ToneTime = millis() + 200;
@@ -385,10 +510,8 @@ void Start_Tone() {
   }
 }
 
-
->>>>>>> Stashed changes
 //====================================================
-//===              Wifi Stuff                      ===
+//===              Wifi Setup                      ===
 //====================================================
 
 /* Put IP Address details */
@@ -399,7 +522,7 @@ void WifiSetup() {
   // Wi-Fi connection
   // Set up access point with SSID "MiniBot" + MAC address
   WiFi.mode(WIFI_AP);
-  WiFi.softAP("robot", "password");
+  WiFi.softAP(ssid, password);
   WiFi.softAPConfig(local_ip, gateway, subnet);
   // Set up mDNS responder
   if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
@@ -407,78 +530,9 @@ void WifiSetup() {
   Serial.println("WiFi start");
 }
 
-// Function to handle slew rate for motor speed ramping
-// Slew rate for ramping motor speed
-const int SLEW_RATE_MS = 20;
-int SlewRateFunction(int Input_Target, int Input_Current) {
-  int speedDiff = Input_Target - Input_Current;
-  if (speedDiff > 0) Input_Current += min(speedDiff, SLEW_RATE_MS);
-  else if (speedDiff < 0) Input_Current -= min(-speedDiff, SLEW_RATE_MS);
-  constrain(Input_Current, -127, 127);
-  return Input_Current;
-}
-
-// Function to control motor output based on input values
-// Motor speed limits and starting speed
-const int DEAD_BAND = 20;
-const int MAX_SPEED = 255;
-const int MIN_SPEED = -255;
-const int MIN_STARTING_SPEED = 140;
-const int STOP = 0;
-bool INVERT = false;
-void Set_Motor_Output(int Output, int Motor_ChA, int Motor_ChB) {
-  if (INVERT) Output = -Output;
-  Output = constrain(Output, -127, 127);
-  int Mapped_Value = map(abs(Output), 0, 127, MIN_STARTING_SPEED, MAX_SPEED);
-  int A, B = 0;
-  if (Output < -DEAD_BAND) {  // Rotate Clockwise
-    A = 0;
-    B = Mapped_Value;
-  } else if (Output > DEAD_BAND) {  // Rotate Counter-Clockwise
-    A = Mapped_Value;
-    B = 0;
-  } else {  // Rotation Stop
-    A = STOP;
-    B = STOP;
-  }
-  ledcWrite(Motor_ChA, A);  //send to motor control pins
-  ledcWrite(Motor_ChB, B);
-}
-
-// configure motor output
-int Motor_FrontLeft_SetValue, Motor_FrontRight_SetValue, Motor_BackLeft_SetValue, Motor_BackRight_SetValue = 0;
-void Motor_Control() {
-  Set_Motor_Output(Motor_FrontLeft_SetValue, Motor_M1_A, Motor_M1_B);
-  Set_Motor_Output(Motor_BackLeft_SetValue, Motor_M2_A, Motor_M2_B);
-  Set_Motor_Output(Motor_FrontRight_SetValue, Motor_M5_A, Motor_M5_B);
-  Set_Motor_Output(Motor_BackRight_SetValue, Motor_M6_A, Motor_M6_B);
-}
-
-// stop motors from spinning
-void Motor_STOP() {
-  Set_Motor_Output(STOP, Motor_M1_A, Motor_M1_B);
-  Set_Motor_Output(STOP, Motor_M2_A, Motor_M2_B);
-  Set_Motor_Output(STOP, Motor_M5_A, Motor_M5_B);
-  Set_Motor_Output(STOP, Motor_M6_A, Motor_M6_B);
-}
-
-// NeoPixel Configurations
-Adafruit_NeoPixel strip(LED_COUNT, LED_DataPin, NEO_GRB + NEO_KHZ800);
-const uint32_t RED = strip.Color(255, 0, 0, 0);
-const uint32_t GREEN = strip.Color(0, 255, 0, 0);
-const uint32_t BLUE = strip.Color(0, 0, 255, 0);
-const uint32_t WHITE = strip.Color(0, 0, 0, 255);
-const uint32_t PURPLE = strip.Color(255, 0, 255, 0);
-const uint32_t CYAN = strip.Color(0, 255, 255, 0);
-const uint32_t YELLOW = strip.Color(255, 255, 0, 0);
-
-// Set a specific color for the entire NeoPixel strip
-void NeoPixel_SetColour(uint32_t color) {
-  for (int i = 0; i < strip.numPixels(); i++) {  // For each pixel in strip...
-    strip.setPixelColor(i, color);               //  Set pixel's color (in RAM)
-  }
-  strip.show();  // Update strip with new contents
-}
+//====================================================
+//===                 setup                        ===
+//====================================================
 
 // Set up pins, LED PWM functionalities and Serial and Serial2 communication
 void setup() {
@@ -527,8 +581,7 @@ void setup() {
   WifiSetup();
   startServer();
   NeoPixel_SetColour(PURPLE);
-  Serial.println("Server started");
-  Serial.println("MiniBot System Ready! Version = " + Version);
+  Serial.println("MiniBot System Ready! Version = " + Version); 
 }
 
 
