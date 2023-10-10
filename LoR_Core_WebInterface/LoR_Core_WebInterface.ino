@@ -116,6 +116,24 @@ void Motor_STOP() {
   Set_Motor_Output(STOP, Motor_M6_A, Motor_M6_B);
 }
 
+// Tones created in the motors. Cycle through each motor.
+void Start_Tone() {
+  for (int i = 0; i < 6; i++) {
+    long ToneTime = millis() + 200;
+    bool state = 0;
+    while (millis() < ToneTime) {
+      digitalWrite(motorPins_A[i], state);
+      digitalWrite(motorPins_B[i], !state);
+      state = !state;
+      long WaitTime = micros() + (100 * (i + 1));
+      while (micros() < WaitTime) {}
+    }
+    digitalWrite(motorPins_A[i], 0);
+    digitalWrite(motorPins_B[i], 0);
+    delay(50);
+  }
+}
+
 //====================================================
 //===              NeoPixels                       ===
 //====================================================
@@ -329,6 +347,12 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyA': 'left',
         'KeyS': 'backward',
         'KeyD': 'right',
+        'KeyL': 'low',
+        'KeyH': 'high',
+        'Key1': 'functionA',
+        'Key2'; 'functionB',
+        'Key3': 'functionC',
+        'Key4': 'functionD',
       };
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
@@ -489,25 +513,6 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
 
   httpd_resp_set_hdr(req, "Access-Control-Allow-Origin", "*");
   return httpd_resp_send(req, NULL, 0);
-}
-
-
-// Tones created in the motors. Cycle through each motor.
-void Start_Tone() {
-  for (int i = 0; i < 6; i++) {
-    long ToneTime = millis() + 200;
-    bool state = 0;
-    while (millis() < ToneTime) {
-      digitalWrite(motorPins_A[i], state);
-      digitalWrite(motorPins_B[i], !state);
-      state = !state;
-      long WaitTime = micros() + (100 * (i + 1));
-      while (micros() < WaitTime) {}
-    }
-    digitalWrite(motorPins_A[i], 0);
-    digitalWrite(motorPins_B[i], 0);
-    delay(50);
-  }
 }
 
 //====================================================
