@@ -143,7 +143,7 @@ Adafruit_NeoPixel strip(LED_COUNT, LED_DataPin, NEO_GRB + NEO_KHZ800);
 const uint32_t RED = strip.Color(255, 0, 0, 0);
 const uint32_t GREEN = strip.Color(0, 255, 0, 0);
 const uint32_t BLUE = strip.Color(0, 0, 255, 0);
-const uint32_t WHITE = strip.Color(0, 0, 0, 255);
+const uint32_t WHITE = strip.Color(255, 255, 255, 255);
 const uint32_t PURPLE = strip.Color(255, 0, 255, 0);
 const uint32_t CYAN = strip.Color(0, 255, 255, 0);
 const uint32_t YELLOW = strip.Color(255, 255, 0, 0);
@@ -157,24 +157,25 @@ void NeoPixel_SetColour(uint32_t color) {
   strip.show();  // Update strip with new contents
 }
 
+
 //====================================================
 //===          Custom Button Functions             ===
 //====================================================
 
 void functionA() {
-  // add your function for button A 
+  // add your function for button A
 }
 
 void functionB() {
-  // add your function for button B 
+  // add your function for button B
 }
 
 void functionC() {
-  // add your function for button C 
+  // add your function for button C
 }
 
 void functionD() {
-  // add your function for button D 
+  // add your function for button D
 }
 
 //====================================================
@@ -338,6 +339,7 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         isButtonPressed = false; // A button has been released
         sendData('stop');
       }
+
       const keyMap = {
         'ArrowUp': 'forward',
         'ArrowLeft': 'left',
@@ -349,11 +351,16 @@ static const char PROGMEM INDEX_HTML[] = R"rawliteral(
         'KeyD': 'right',
         'KeyL': 'low',
         'KeyH': 'high',
-        'Key1': 'functionA',
-        'Key2'; 'functionB',
-        'Key3': 'functionC',
-        'Key4': 'functionD',
+        'Digit1': 'functionA',
+        'Digit2': 'functionB',
+        'Digit3': 'functionC',
+        'Digit4': 'functionD',
+        'Numpad1': 'functionA',
+        'Numpad2': 'functionB',
+        'Numpad3': 'functionC',
+        'Numpad4': 'functionD',
       };
+
       document.addEventListener('keydown', function(event) {
         if (!isButtonPressed) { // Only send data if no button is being pressed
           const action = keyMap[event.code];
@@ -431,6 +438,7 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
   char variable[32] = {
     0,
   };
+  //Serial.println("Recieved Somthing");
 
   buf_len = httpd_req_get_url_query_len(req) + 1;
   if (buf_len > 1) {
@@ -464,10 +472,12 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     Serial.println("High Speed");
     driveSpeed = highSpeed;
     speed = "High";
+    NeoPixel_SetColour(PURPLE);
   } else if (!strcmp(variable, "low")) {
     Serial.println("Low Speed");
     driveSpeed = lowSpeed;
     speed = "Low";
+    NeoPixel_SetColour(YELLOW);
   } else if (!strcmp(variable, "forward")) {
     Serial.println("Forward " + speed);
     Motor_Control(driveSpeed, driveSpeed);  // send 90% power to drive base
@@ -585,8 +595,8 @@ void setup() {
 
   WifiSetup();
   startServer();
-  NeoPixel_SetColour(PURPLE);
-  Serial.println("MiniBot System Ready! Version = " + Version); 
+  NeoPixel_SetColour(WHITE);
+  Serial.println("MiniBot System Ready! Version = " + Version);
 }
 
 
