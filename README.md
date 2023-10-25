@@ -1,5 +1,11 @@
 # LoR_Core_WebInterface
 
+**User Guide to Web Interface Control :** [Download User Guide](https://tr.ee/w6C960lNGT)
+
+**LoR_Core Module :** [Download Data Sheet](https://tr.ee/klJ5_gKmH-)
+
+**Beginners Guide to minibots:** [Download beginner's Guide](https://tr.ee/QhCzRJD69O)
+
 **Link Tree :** [Useful Links to Web Pages and Documentation](https://linktr.ee/LordofRobots)
 
 This Arduino sketch serves as a comprehensive framework for remotely controlling a MiniBot via a web interface. Utilizing libraries for WiFi, HTTP server, and Adafruit's NeoPixel, the code establishes the MiniBot as a WiFi access point with the SSID 'MiniBot'. Users can connect to this network and access the web interface by navigating to the MiniBot's local IP address (10.0.0.1) in a web browser or by using the mDNS address 'robot.local'.
