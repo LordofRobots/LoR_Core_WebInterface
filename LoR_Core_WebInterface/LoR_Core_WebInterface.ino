@@ -31,6 +31,8 @@ const String password = "password";
 int highSpeed = 90;
 int lowSpeed = 50;
 
+int driveSpeed = lowSpeed;  // default speed
+
 //====================================================
 
 // IO Interface Definitions
@@ -72,7 +74,6 @@ const int MOTOR_PWM_Channel_A[] = { Motor_M1_A, Motor_M2_A, Motor_M3_A, Motor_M4
 const int MOTOR_PWM_Channel_B[] = { Motor_M1_B, Motor_M2_B, Motor_M3_B, Motor_M4_B, Motor_M5_B, Motor_M6_B };
 const int PWM_FREQUENCY = 20000;
 const int PWM_RESOLUTION = 8;
-
 
 //====================================================
 //===              Motor Controls                  ===
@@ -161,6 +162,26 @@ void NeoPixel_SetColour(uint32_t color) {
 //====================================================
 //===          Custom Button Functions             ===
 //====================================================
+
+void functionForward() {
+  Motor_Control(driveSpeed, driveSpeed);
+}
+
+void functionBackward() {
+  Motor_Control(-driveSpeed, -driveSpeed);  // send power to drive base
+}
+
+void functionLeft() {
+  Motor_Control(-driveSpeed, driveSpeed);  // send power to drive base
+}
+
+void functionRight() {
+  Motor_Control(driveSpeed, -driveSpeed);  // send power to drive base
+}
+
+void functionStop() {
+  Motor_STOP();
+}
 
 void functionA() {
   // add your function for button A
@@ -429,7 +450,6 @@ static esp_err_t index_handler(httpd_req_t *req) {
 }
 
 // HTTP handler for processing robot movement commands
-int driveSpeed = lowSpeed;  // default speed
 String speed = "low";
 
 static esp_err_t cmd_handler(httpd_req_t *req) {
@@ -480,20 +500,20 @@ static esp_err_t cmd_handler(httpd_req_t *req) {
     NeoPixel_SetColour(YELLOW);
   } else if (!strcmp(variable, "forward")) {
     Serial.println("Forward " + speed);
-    Motor_Control(driveSpeed, driveSpeed);  // send 90% power to drive base
+    functionForward();
   } else if (!strcmp(variable, "left")) {
     Serial.println("Left " + speed);
-    Motor_Control(-driveSpeed, driveSpeed);  // send 90% power to drive base
+    functionLeft();
   } else if (!strcmp(variable, "right")) {
     Serial.println("Right " + speed);
-    Motor_Control(driveSpeed, -driveSpeed);  // send 90% power to drive base
+    functionRight();
   } else if (!strcmp(variable, "backward")) {
     Serial.println("Backward " + speed);
-    Motor_Control(-driveSpeed, -driveSpeed);  // send 90% power to drive base
+    functionBackward();
   } else if (!strcmp(variable, "stop")) {
     Serial.println("Stop");
+    functionStop();
     NeoPixel_SetColour(RED);
-    Motor_STOP();
   } else if (!strcmp(variable, "functionA")) {
     Serial.println("Function A");
     NeoPixel_SetColour(CYAN);
@@ -537,7 +557,7 @@ void WifiSetup() {
   // Wi-Fi connection
   // Set up access point with SSID "MiniBot" + MAC address
   WiFi.mode(WIFI_AP);
-  WiFi.softAP(ssid, password);
+  WiFi.softAP(ssid);
   WiFi.softAPConfig(local_ip, gateway, subnet);
   // Set up mDNS responder
   if (!MDNS.begin("robot")) Serial.println("Error setting up MDNS responder!");
